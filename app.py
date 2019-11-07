@@ -49,10 +49,14 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 
 # sanity check route
 @app.route('/ping', methods=['GET'])
-
-
 def ping_pong():
     return jsonify('poof!')
+
+def get_book(search_id, book_list):
+    return [x for x in book_list if search_id in x['book_id']]
+
+
+
 
 @app.route('/books', methods=['GET', 'POST'])
 def all_books():
