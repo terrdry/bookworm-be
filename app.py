@@ -1,37 +1,38 @@
 from flask import Flask,  jsonify, request
 from flask_cors import CORS
 import uuid
+import os
 
 BOOKS = [
     {
-        'id': uuid.uuid4().hex,
+        'book_id': uuid.uuid4().hex,
         'title': 'The Fifth Season',
         'author': 'N.K. Jemesin',
-        'reae': True
+        'read': True
     },
     {
-        'id': uuid.uuid4().hex,
+        'book_id': uuid.uuid4().hex,
         'title': 'The Warrior who carried Life',
         'author': 'Geoff Ryman',
-        'reae': True
+        'read': True
     },
     {
-        'id': uuid.uuid4().hex,
+        'book_id': uuid.uuid4().hex,
         'title': 'Words of Radiance',
         'author': 'Brandon Sanderson',
-        'reae': True
+        'read': True
     },
     {
-        'id': uuid.uuid4().hex,
+        'book_id': uuid.uuid4().hex,
         'title': 'Roadside Picnic',
         'author': 'Arkady Strugatsky',
-        'reae': True
+        'read': True
     },
     {
-        'id': uuid.uuid4().hex,
+        'book_id': uuid.uuid4().hex,
         'title': 'Perdido Street Station',
         'author': 'China Mieville',
-        'reae': True
+        'read': True
     },
 ]
 
@@ -59,7 +60,7 @@ def all_books():
     if request.method == 'POST':
         post_data = request.get_json()
         BOOKS.append({
-            'id': uuid.uuid4().hex,
+            'book_id': post_data.get('book_id'),
             'title': post_data.get('title'),
             'author': post_data.get('author'),
             'read': post_data.get('read')
@@ -74,23 +75,24 @@ def all_books():
 def single_book(book_id):
     response_object = {'status': 'success'}
     if request.method == 'PUT':
-        post_data = request.get_json()
+        get_data = request.get_json()
         remove_book(book_id)
         BOOKS.append({
-            'id': uuid.uuid4().hex,
-            'title': post_data.get('title'),
-            'author': post_data.get('author'),
-            'read': post_data.get('read')
+            'book_id': book_id,
+            'title': get_data.get('title'),
+            'author': get_data.get('author'),
+            'read': get_data.get('read')
         })
         response_object['message'] = 'Book Updated!'
     if request.method == 'DELETE':
+        # todo: need to test remove_book
         remove_book(book_id)
         response_object['message'] = 'Book removed!'
     return jsonify(response_object)
 
 def remove_book(book_id):
     for book in BOOKS:
-        if book['id'] == book_id:
+        if book['book_id'] == book_id:
             BOOKS.remove(book)
             return True
     return False
@@ -98,4 +100,5 @@ def remove_book(book_id):
 
 
 if __name__ == '__main__':
-    app.run()
+    port = int(os.getenv("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)

@@ -1,0 +1,6 @@
+---
+applications:
+- name: book-server
+  command: python app.py
+  memory: 1G
+  instances: 1
