@@ -15,23 +15,22 @@ class TestBookMain(unittest.TestCase):
     def test_books_index(self):
         tester = app.test_client(self)
         response = tester.get('/books', content_type='html/text')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(200, response.status_code)
 
     def test_books_json(self):
         tester = app.test_client(self)
         response = tester.get('/books', content_type='html/text')
-        self.assertIsInstance(response.json, dict)
+        self.assertIsInstance(response.json['books'], list)
 
     def test_books_list_length(self):
         tester = app.test_client(self)
         response = tester.get('/books', content_type='html/text')
-        self.assertEqual(len(response.json['books']), 5)
+        self.assertEqual(5, len(response.json['books']))
 
     def test_books_first_entry(self):
         tester = app.test_client(self)
         response = tester.get('/books', content_type='html/text')
-        book_data = response.json
-        self.assertEqual(book_data['books'][0]['author'], 'N.K. Jemesin')
+        self.assertEqual('N.K. Jemesin', response.json['books'][0]['author'])
 
 
 class TestBookExercise(unittest.TestCase):
@@ -46,7 +45,7 @@ class TestBookExercise(unittest.TestCase):
         tester = app.test_client(self)
         self.book_id = self.new_book['book_id']
         response = tester.post('/books', data=json.dumps(self.new_book), content_type='application/json')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(200, response.status_code)
 
     @staticmethod
     def count_records(test_obj):
@@ -61,23 +60,11 @@ class TestBookExercise(unittest.TestCase):
         response = tester.put('/books/%s' % self.book_id,
                               data=json.dumps(self.new_book),
                               content_type='application/json')
-
-        book_stuff = tester.get('/books', content_type='application/json').json['books']
-
-        x = get_book(self.book_id, book_stuff)
-
-        self.assertEqual('foo', get_book(self.book_id, book_stuff)[0]['title'])
-
+        self.assertEqual(200, response.status_code)
+        list_of_books = tester.get('/books', content_type='application/json').json['books']
+        self.assertEqual('foo', get_book(self.book_id, list_of_books)[0]['title'])
 
     def tearDown(self):
         tester = app.test_client(self)
-        # what is there
-        res = tester.get('/books', content_type='applicaiton/html')
-        myLeng = len(res.json['books'])
         response = tester.delete('/books/%s' % self.book_id, content_type='application/html')
-        res = tester.get('/books', content_type='applicaiton/html')
-        myLeng = len(res.json['books'])
-        self.assertEqual(response.status_code, 200)
-
-
-
+        self.assertEqual(200, response.status_code)
