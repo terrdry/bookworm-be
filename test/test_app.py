@@ -1,4 +1,4 @@
-from app import app
+from bookworm import app
 import json
 import unittest
 import uuid

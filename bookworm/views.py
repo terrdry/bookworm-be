@@ -1,51 +1,5 @@
-from flask import Flask,  jsonify, request
-from flask_cors import CORS
+from . import app
 import uuid
-import os
-
-BOOKS = [
-    {
-        'book_id': uuid.uuid4().hex,
-        'title': 'The Fifth Season',
-        'author': 'N.K. Jemesin',
-        'read': True
-    },
-    {
-        'book_id': uuid.uuid4().hex,
-        'title': 'The Warrior who carried Life',
-        'author': 'Geoff Ryman',
-        'read': True
-    },
-    {
-        'book_id': uuid.uuid4().hex,
-        'title': 'Words of Radiance',
-        'author': 'Brandon Sanderson',
-        'read': True
-    },
-    {
-        'book_id': uuid.uuid4().hex,
-        'title': 'Roadside Picnic',
-        'author': 'Arkady Strugatsky',
-        'read': True
-    },
-    {
-        'book_id': uuid.uuid4().hex,
-        'title': 'Perdido Street Station',
-        'author': 'China Mieville',
-        'read': True
-    },
-]
-
-#configuration
-DEBUG = True
-
-#instantiate the app
-app = Flask(__name__)
-app.config.from_object(__name__)
-
-# enable CORS
-CORS(app, resources={r'/*': {'origins': '*'}})
-
 
 # sanity check route
 @app.route('/ping', methods=['GET'])
@@ -57,6 +11,8 @@ def get_book(search_id, book_list):
 
 
 
+from flask import jsonify, request
+from . import BOOKS
 
 @app.route('/books', methods=['GET', 'POST'])
 def all_books():
@@ -119,8 +75,3 @@ def update_book(book_id):
     except IndexError:
         return False
     return True
-
-
-if __name__ == '__main__':
-    port = int(os.getenv("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
