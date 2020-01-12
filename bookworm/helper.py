@@ -32,7 +32,8 @@ BOOKS = [
 
 def load_booktable():
     ''' This will create a list of dictionary items '''
-    selection = [dict(title=book.title,
+    selection = [dict(book_id=book.id,
+                      title=book.title,
                       author=book.author,
                       read=book.read
                       )

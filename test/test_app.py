@@ -21,6 +21,8 @@ class TestBookMain(unittest.TestCase):
         tester = app.test_client(self)
         response = tester.get('/books', content_type='html/text')
         self.assertEqual(200, response.status_code)
+        # Make sure that we return a book_id back to the FE; disastrous without
+        self.assertGreaterEqual(response.json['books'][0]['book_id'], 0, 'No book_id')
 
     def test_books_json(self):
         tester = app.test_client(self)
