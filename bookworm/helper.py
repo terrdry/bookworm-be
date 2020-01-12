@@ -30,6 +30,16 @@ BOOKS = [
 ]
 
 
+def load_booktable():
+    ''' This will create a list of dictionary items '''
+    selection = [dict(title=book.title,
+                      author=book.author,
+                      read=book.read
+                      )
+                 for book in Books.query.all()]
+    return selection
+
+
 def provision_database():
     for elem in BOOKS:
         new_book = Books(title=elem['title'],

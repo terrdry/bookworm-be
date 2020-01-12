@@ -2,6 +2,9 @@ from bookworm import app
 import json
 import unittest
 import uuid
+from bookworm.helper import provision_database
+from bookworm import db
+from bookworm.models import Books
 
 
 class TestBookMain(unittest.TestCase):
@@ -10,6 +13,9 @@ class TestBookMain(unittest.TestCase):
                 'author': "Arthur C. Clarke",
                 'read': True
                 }
+
+    def setUp(self):
+        provision_database()
 
     def test_books_index(self):
         tester = app.test_client(self)
@@ -31,53 +37,63 @@ class TestBookMain(unittest.TestCase):
         response = tester.get('/books', content_type='html/text')
         self.assertEqual('N.K. Jemesin', response.json['books'][0]['author'])
 
-class TestBookHelper():
+    def tearDown(self):
+        Books.query.delete()
+        db.session.commit()
+
+
+class TestBookHelper:
     @staticmethod
-    def count_records(test_obj):
-        response = test_obj.get('/books', content_type='application/json')
-        return len(response.json['books'])
+    def count_records():
+        return len(Books.query.all())
 
     @staticmethod
-    def ret_book(test_obj, search_id):
-        response = test_obj.get('/books', content_type='application/json')
-        book_list = response.json['books']
-        return [x for x in book_list if search_id in x['book_id']]
+    def ret_book(search_id):
+        book_record = db.session.query(Books).filter(Books.id == search_id).first()
+        return [dict(id=book_record.id,
+                     title=book_record.title,
+                     author=book_record.author,
+                     read=book_record.read
+                     )]
+
 
 class TestBookExercise(unittest.TestCase):
-    book_id = 0
+    book_idnum = 2
+    new_book = {'book_id': '',
+                'title': "Hyperion",
+                'author': "Dan Simmons",
+                'read': True
+                }
+
     def setUp(self):
-        self.new_book = {'book_id': '',
-                         'title': "Hyperion",
-                         'author': "Dan Simmons",
-                         'read': True
-                         }
+        provision_database()
 
     def test_add_book(self):
         tester = app.test_client(self)
-        self.assertEqual(5, TestBookHelper.count_records(tester))
+        self.assertEqual(5, TestBookHelper.count_records())
 
         response = tester.post('/books',
                                data=json.dumps(self.new_book),
                                content_type='application/json')
-        TestBookExercise.book_id = response.json['book_id']
         self.assertEqual(200, response.status_code)
-        self.assertEqual(6, TestBookHelper.count_records(tester))
+        self.assertEqual(6, TestBookHelper.count_records())
 
     def test_change_book(self):
         tester = app.test_client(self)
-        self.assertEqual(6, TestBookHelper.count_records(tester))
-        self.new_book['book_id'] = TestBookExercise.book_id
+        self.assertEqual(5, TestBookHelper.count_records())
+        self.new_book['book_id'] = self.book_idnum
         self.new_book['title'] = "foo"
-        response = tester.put('/books/%s' % TestBookExercise.book_id,
-                               data=json.dumps(self.new_book),
-                               content_type='application/json')
+        self.new_book['author'] = "not"
+        response = tester.put('/books/%s' % self.book_idnum,
+                              data=json.dumps(self.new_book),
+                              content_type='application/json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(6, TestBookHelper.count_records(tester))
-        self.assertEqual('foo', TestBookHelper.ret_book(tester, TestBookExercise.book_id)[0]['title'])
+        self.assertEqual(5, TestBookHelper.count_records())
+        self.assertEqual('foo', TestBookHelper.ret_book(TestBookExercise.book_idnum)[0]['title'])
 
     def test_change_book_not_there(self):
         tester = app.test_client(self)
-        self.assertEqual(6, TestBookHelper.count_records(tester))
+        self.assertEqual(5, TestBookHelper.count_records())
 
         response = tester.put('/books/%s' % 'NOT THERE',
                               data=json.dumps(self.new_book),
@@ -92,12 +108,13 @@ class TestBookExercise(unittest.TestCase):
 
     def test_delete_book(self):
         tester = app.test_client(self)
-        self.assertEqual(6, TestBookHelper.count_records(tester))
+        self.assertEqual(5, TestBookHelper.count_records())
 
-        response = tester.delete('/books/%s' % TestBookExercise.book_id,
+        response = tester.delete('/books/%s' % TestBookExercise.book_idnum,
                                  content_type='application/json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(5, TestBookHelper.count_records(tester))
+        self.assertEqual(4, TestBookHelper.count_records())
 
     def tearDown(self):
-        pass
+        Books.query.delete()
+        db.session.commit()
