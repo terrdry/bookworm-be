@@ -2,7 +2,7 @@ from bookworm import app
 import json
 import unittest
 import uuid
-from bookworm.helper import provision_database
+from bookworm.helper import provision_database, return_book
 from bookworm import db
 from bookworm.models import Books
 
@@ -22,7 +22,11 @@ class TestBookMain(unittest.TestCase):
         response = tester.get('/books', content_type='html/text')
         self.assertEqual(200, response.status_code)
         # Make sure that we return a book_id back to the FE; disastrous without
-        self.assertGreaterEqual(response.json['books'][0]['book_id'], 0, 'No book_id')
+        # Just make sure we are passing out all the necessary objets
+        self.assertIsNotNone(response.json['books'][1]['book_id'], 'No book_id')
+        self.assertIsNotNone(response.json['books'][1]['title'], 'No title')
+        self.assertIsNotNone(response.json['books'][1]['author'], 'No author')
+        self.assertIsNotNone(response.json['books'][1]['read'], 'No read flag')
 
     def test_books_json(self):
         tester = app.test_client(self)
@@ -51,12 +55,7 @@ class TestBookHelper:
 
     @staticmethod
     def ret_book(search_id):
-        book_record = db.session.query(Books).filter(Books.id == search_id).first()
-        return [dict(id=book_record.id,
-                     title=book_record.title,
-                     author=book_record.author,
-                     read=book_record.read
-                     )]
+        return return_book(search_id)
 
 
 class TestBookExercise(unittest.TestCase):
